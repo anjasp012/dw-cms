@@ -29,7 +29,6 @@ import {
   FileBarChart,
   Sun,
   Moon,
-  Radio
 } from 'lucide-react'
 
 export default function Dashboard({ username, onLogout }) {
@@ -43,6 +42,16 @@ export default function Dashboard({ username, onLogout }) {
     if (path === 'settings' || path === 'setting') return 'settings'
     return 'wishes'
   }, [location.pathname])
+
+  const setCurrentView = useCallback((view) => {
+    const routeMap = {
+      'wishes': '/wishes',
+      'report': '/report',
+      'settings': '/settings',
+    }
+    navigate(routeMap[view] || '/wishes')
+  }, [navigate])
+
   const [analytics, setAnalytics] = useState({ total_wishes: 0, approved: 0, rejected: 0, pending: 0 })
   const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -54,8 +63,14 @@ export default function Dashboard({ username, onLogout }) {
   const [pageSize, setPageSize] = useState(20)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const { theme, isDark, toggleTheme } = useTheme()
+  const { isDark, toggleTheme } = useTheme()
   const isFetchingRef = useRef(false)
+
+  const viewTitles = {
+    wishes: 'Pusat Moderasi Aspirasi',
+    report: 'Laporan & Ekspor Data',
+    settings: 'Pengaturan Kuota & Frontend',
+  }
 
   const verifyHealth = useCallback(async () => {
     const isHealthy = await checkApiHealth()
@@ -107,7 +122,6 @@ export default function Dashboard({ username, onLogout }) {
     if (!autoSyncEnabled) return
 
     const interval = setInterval(() => {
-      // Background silent sync tanpa menampilkan skeleton/spinner
       loadData(false)
     }, 4000)
 
@@ -169,176 +183,120 @@ export default function Dashboard({ username, onLogout }) {
     setPage(0)
   }
 
-  const viewTitles = {
-    wishes: 'Moderasi Aspirasi',
-    report: 'Laporan & Ekspor',
-    settings: 'Pengaturan Frontend',
-  }
+  const navItems = [
+    {
+      id: 'wishes',
+      label: 'Moderasi Aspirasi',
+      icon: Layers,
+      count: analytics.total_wishes,
+    },
+    {
+      id: 'report',
+      label: 'Laporan & Ekspor',
+      icon: FileBarChart,
+    },
+    {
+      id: 'settings',
+      label: 'Pengaturan Frontend',
+      icon: Sliders,
+    },
+  ]
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-200">
-      <Toaster
-        position="bottom-right"
-        theme={theme}
-        toastOptions={{
-          className: 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm font-sans shadow-xl',
-        }}
-      />
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans transition-colors duration-200">
+      <Toaster position="bottom-right" richColors theme={isDark ? 'dark' : 'light'} />
 
-      {/* Mobile Backdrop */}
+      {/* Backdrop overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
         />
       )}
 
-      {/* Sidebar Navigation */}
+      {/* Left Sidebar Dashboard (Aligned with RT-CMS exact layout) */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-white dark:bg-zinc-950/95 border-r border-zinc-200 dark:border-zinc-800 flex flex-col z-50 transition-transform duration-200 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        className={`w-64 fixed inset-y-0 left-0 z-40 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between transition-transform duration-200 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
       >
-        {/* Workspace Brand Header */}
-        <div className="h-14 px-5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-zinc-100 dark:text-zinc-950 font-bold text-xs tracking-tighter">
-              DW
-            </div>
-            <div className="flex flex-col">
-              <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-200 tracking-tight leading-none">Dream Wall</span>
-              <span className="text-[10px] text-zinc-500 font-mono mt-0.5">PANEL ADMIN</span>
-            </div>
-          </div>
-          <button
-            className="md:hidden text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 p-1"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Navigation Links */}
-        <div className="flex-1 px-3 py-4 space-y-1">
-          <div className="px-2 pb-1.5 text-xs font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-            Menu Utama
-          </div>
-
-          {/* 1. Moderasi Aspirasi */}
-          <button
-            onClick={() => {
-              navigate('/wishes')
-              setSidebarOpen(false)
-            }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              currentView === 'wishes'
-                ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Layers className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <span>Moderasi Aspirasi</span>
-          </button>
-
-          {/* 2. Laporan & Ekspor */}
-          <button
-            onClick={() => {
-              navigate('/report')
-              setSidebarOpen(false)
-            }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              currentView === 'report'
-                ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
-            }`}
-          >
-            <FileBarChart className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <span>Laporan & Ekspor</span>
-          </button>
-
-          {/* 3. Pengaturan Frontend & Kuota */}
-          <button
-            onClick={() => {
-              navigate('/settings')
-              setSidebarOpen(false)
-            }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              currentView === 'settings'
-                ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Sliders className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <span>Pengaturan Frontend</span>
-          </button>
-
-          {/* Documentation Section */}
-          <div className="pt-4 px-2 pb-1.5 text-xs font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-            Pengembang
-          </div>
-
-          <a
-            href="http://127.0.0.1:8000/docs"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between px-3 py-2 rounded-md text-zinc-600 dark:text-zinc-400 text-sm font-medium hover:bg-zinc-100/60 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-          >
+        <div>
+          {/* Logo & Brand Header */}
+          <div className="h-14 px-5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
             <div className="flex items-center gap-2.5">
-              <BookOpen className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-              <span>Swagger API Docs</span>
+              <div className="w-7 h-7 rounded bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-100 dark:text-zinc-900 shadow-sm flex-shrink-0">
+                DW
+              </div>
+              <div>
+                <div className="font-semibold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 leading-none">
+                  DREAM WALL
+                </div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-0.5 leading-none">ADMIN CMS</div>
+              </div>
             </div>
-            <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
-          </a>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex flex-col gap-1 p-3">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const active = currentView === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentView(item.id)
+                    setSidebarOpen(false)
+                  }}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-medium transition-all ${
+                    active
+                      ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-semibold shadow-sm'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${active ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.count !== undefined && (
+                    <span className="text-[11px] text-zinc-400 font-mono">
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
         </div>
 
-        {/* System & Connection Status Widget */}
-        <div className="p-3 mx-3 mb-3 rounded-md bg-zinc-100/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">API BACKEND</span>
-            {apiStatus === 'online' && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-mono font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                ONLINE
-              </span>
-            )}
-            {apiStatus === 'offline' && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-mono font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                OFFLINE
-              </span>
-            )}
-            {apiStatus === 'checking' && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-mono font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                CHECKING
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-zinc-500 font-mono truncate">
-            http://127.0.0.1:8000
-          </div>
-        </div>
-
-        {/* User Profile & Logout Section */}
-        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300 flex-shrink-0">
-              {username ? username.charAt(0).toUpperCase() : 'A'}
+        {/* Bottom User Profile & Logout Section */}
+        <div>
+          <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300 flex-shrink-0">
+                {username ? username.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{username}</div>
+                <div className="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono leading-none">ADMINISTRATOR</div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{username}</div>
-              <div className="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono leading-none">ADMINISTRATOR</div>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onLogout}
+              title="Keluar (Logout)"
+              className="h-8 w-8 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            title="Keluar (Logout)"
-            className="h-8 w-8 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
         </div>
       </aside>
 
@@ -354,14 +312,14 @@ export default function Dashboard({ username, onLogout }) {
               <Menu className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-zinc-400 dark:text-zinc-500 font-mono text-xs">DREAMWALL</span>
+              <span className="text-zinc-400 dark:text-zinc-500 font-mono text-xs">DREAM WALL</span>
               <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-700" />
               <span className="font-medium text-zinc-800 dark:text-zinc-200 text-sm">{viewTitles[currentView]}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Live Auto-Sync Status Badge */}
+            {/* Auto-sync Toggle Pill */}
             <button
               type="button"
               onClick={() => {
@@ -384,7 +342,7 @@ export default function Dashboard({ username, onLogout }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open('http://127.0.0.1:8000/docs', '_blank')}
+              onClick={() => window.open(`${import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'}/docs`, '_blank')}
               className="h-9 text-xs font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
             >
               <BookOpen className="w-3.5 h-3.5 mr-1.5 text-zinc-500 dark:text-zinc-400" />
@@ -392,12 +350,12 @@ export default function Dashboard({ username, onLogout }) {
               <ExternalLink className="w-3.5 h-3.5 ml-1.5 text-zinc-400 dark:text-zinc-500" />
             </Button>
 
-            {/* Theme Toggle Button (Paling Kanan) */}
+            {/* Theme Toggle Button */}
             <Button
               variant="outline"
               size="icon"
               onClick={toggleTheme}
-              title={isDark ? 'Ganti ke Tema Terang (Light Mode)' : 'Ganti ke Tema Gelap (Dark Mode)'}
+              title={isDark ? 'Ganti ke Tema Terang' : 'Ganti ke Tema Gelap'}
               className="h-9 w-9 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300"
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-zinc-700" />}
@@ -405,7 +363,7 @@ export default function Dashboard({ username, onLogout }) {
           </div>
         </header>
 
-        {/* Dashboard Content */}
+        {/* Dashboard Content Area */}
         <div className="p-5 sm:p-8 space-y-6 flex-1">
           {currentView === 'wishes' && (
             <>
@@ -448,7 +406,7 @@ export default function Dashboard({ username, onLogout }) {
 
         {/* Global Footer */}
         <footer className="px-8 py-4 border-t border-zinc-200 dark:border-zinc-800/60 text-xs text-zinc-400 dark:text-zinc-600 flex items-center justify-between font-mono">
-          <div>DREAM WALL · PANEL ADMIN</div>
+          <div>DREAM WALL · ADMIN CMS</div>
           <div>SWAGGER: /docs</div>
         </footer>
       </main>

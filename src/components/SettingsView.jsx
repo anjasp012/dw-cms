@@ -53,10 +53,13 @@ export default function SettingsView() {
     }
   }
 
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1'
+  const endpointUrl = `${apiBase}/wishes/approved`
+
   const testApprovedEndpoint = async () => {
     setTesting(true)
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/wishes/approved`, {
+      const res = await fetch(endpointUrl, {
         headers: {
           'x-api-key': 'dreamwall_local_secret_2026'
         }
@@ -86,8 +89,6 @@ export default function SettingsView() {
     }
     toast.success('Disalin ke clipboard')
   }
-
-  const endpointUrl = `http://127.0.0.1:8000/api/v1/wishes/approved`
 
   return (
     <div className="space-y-6 w-full animate-fade-in">
