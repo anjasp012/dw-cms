@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +11,7 @@ import WishDetailDialog from './WishDetailDialog'
 import { formatDate } from '@/lib/api'
 import {
   Check, X, Clock, Trash2, ChevronLeft, ChevronRight,
-  Search, FileText, CheckSquare, Square, MinusSquare
+  Search, FileText, CheckSquare, Square, MinusSquare, Loader2
 } from 'lucide-react'
 
 const FILTERS = [
@@ -159,7 +160,7 @@ export default function WishesTable({
       )}
 
       {/* Main Table Panel */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm overflow-hidden transition-colors">
+      <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm overflow-hidden">
         {/* Table Toolbar Header */}
         <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Filter Segmented Controls */}
@@ -183,12 +184,12 @@ export default function WishesTable({
 
           {/* Search Bar */}
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
               placeholder="Cari aspirasi atau ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm"
+              className="pl-8 h-9 text-xs"
             />
           </div>
         </div>
@@ -197,7 +198,7 @@ export default function WishesTable({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/50 text-zinc-600 dark:text-zinc-400 text-xs font-medium select-none">
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 text-zinc-500 font-mono text-xs select-none">
                 {/* Select All Checkbox */}
                 <th className="px-3 py-3 w-10 text-center">
                   <button
@@ -317,8 +318,8 @@ export default function WishesTable({
 
           {/* Loading State */}
           {loading && (
-            <div className="flex items-center justify-center py-16 text-zinc-500 dark:text-zinc-400 text-sm gap-2.5">
-              <div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 font-mono text-xs gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
               <span>Memuat data aspirasi...</span>
             </div>
           )}
@@ -326,8 +327,8 @@ export default function WishesTable({
           {/* Empty State */}
           {!loading && filteredWishes.length === 0 && (
             <div className="py-16 text-center space-y-2">
-              <FileText className="w-8 h-8 text-zinc-400 dark:text-zinc-600 mx-auto stroke-[1.5]" />
-              <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tidak ada aspirasi ditemukan</div>
+              <FileText className="w-7 h-7 text-zinc-400 dark:text-zinc-600 mx-auto opacity-50 stroke-[1.5]" />
+              <div className="text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300">Tidak ada aspirasi ditemukan</div>
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                 {searchQuery
                   ? `Tidak ada hasil pencarian yang cocok untuk "${searchQuery}".`
@@ -393,7 +394,7 @@ export default function WishesTable({
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Wish Detail Dialog */}
       <WishDetailDialog

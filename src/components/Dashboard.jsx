@@ -17,6 +17,7 @@ import {
 import { useTheme } from '@/lib/theme'
 import { Toaster, toast } from 'sonner'
 import { 
+  BarChart3,
   Layers, 
   RotateCw, 
   LogOut, 
@@ -40,16 +41,16 @@ export default function Dashboard({ username, onLogout }) {
     const path = location.pathname.replace(/^\//, '').toLowerCase()
     if (path === 'report' || path === 'reports') return 'report'
     if (path === 'settings' || path === 'setting') return 'settings'
-    return 'wishes'
+    return 'dashboard'
   }, [location.pathname])
 
   const setCurrentView = useCallback((view) => {
     const routeMap = {
-      'wishes': '/wishes',
+      'dashboard': '/dashboard',
       'report': '/report',
       'settings': '/settings',
     }
-    navigate(routeMap[view] || '/wishes')
+    navigate(routeMap[view] || '/dashboard')
   }, [navigate])
 
   const [analytics, setAnalytics] = useState({ total_wishes: 0, approved: 0, rejected: 0, pending: 0 })
@@ -67,9 +68,9 @@ export default function Dashboard({ username, onLogout }) {
   const isFetchingRef = useRef(false)
 
   const viewTitles = {
-    wishes: 'Pusat Moderasi Aspirasi',
+    dashboard: 'Dashboard',
     report: 'Laporan & Ekspor Data',
-    settings: 'Pengaturan Kuota & Frontend',
+    settings: 'Pengaturan Frontend',
   }
 
   const verifyHealth = useCallback(async () => {
@@ -185,9 +186,9 @@ export default function Dashboard({ username, onLogout }) {
 
   const navItems = [
     {
-      id: 'wishes',
-      label: 'Moderasi Aspirasi',
-      icon: Layers,
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: BarChart3,
       count: analytics.total_wishes,
     },
     {
@@ -365,11 +366,11 @@ export default function Dashboard({ username, onLogout }) {
 
         {/* Dashboard Content Area */}
         <div className="p-5 sm:p-8 space-y-6 flex-1">
-          {currentView === 'wishes' && (
+          {currentView === 'dashboard' && (
             <>
               <div className="space-y-1">
                 <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                  Pusat Moderasi Aspirasi
+                  Dashboard
                 </h1>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   Kelola dan moderasi pesan aspirasi pengunjung yang akan ditampilkan pada layar Dream Wall.

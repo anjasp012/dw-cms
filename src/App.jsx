@@ -27,8 +27,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/wishes" replace />} />
-        <Route path="/dashboard" element={<Navigate to="/wishes" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/wishes" element={<Navigate to="/dashboard" replace />} />
         <Route path="/*" element={<Dashboard username={user} onLogout={handleLogout} />} />
       </Routes>
     </BrowserRouter>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, fetchWishes } from '@/lib/api'
 import { toast } from 'sonner'
+import StatsCards from './StatsCards'
 import { 
   FileSpreadsheet, 
   FileCode, 
@@ -112,43 +113,7 @@ export default function ReportView({ analytics, wishes }) {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 shadow-sm">
-          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-sm font-medium">Total Aspirasi</span>
-            <Inbox className="w-4 h-4" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">{total}</div>
-          <div className="mt-1 text-xs text-zinc-500">100% dari total input</div>
-        </div>
-
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 shadow-sm">
-          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-sm font-medium">Approved (Tayang)</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">{approved}</div>
-          <div className="mt-1 text-xs text-zinc-500">{approvedPct}% disetujui tampil</div>
-        </div>
-
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 shadow-sm">
-          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-sm font-medium">Pending (Menunggu)</span>
-            <Clock3 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-amber-600 dark:text-amber-400">{pending}</div>
-          <div className="mt-1 text-xs text-zinc-500">{pendingPct}% belum ditinjau</div>
-        </div>
-
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 shadow-sm">
-          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-sm font-medium">Rejected (Ditolak)</span>
-            <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">{rejected}</div>
-          <div className="mt-1 text-xs text-zinc-500">{rejectedPct}% ditolak</div>
-        </div>
-      </div>
+      <StatsCards analytics={analytics} />
 
       {/* Export Options Card */}
       <Card>

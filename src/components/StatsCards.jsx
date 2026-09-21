@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Card } from '@/components/ui/card'
 import { Inbox, CheckCircle2, Clock3, XCircle } from 'lucide-react'
 
 function AnimatedCounter({ value }) {
@@ -45,51 +46,57 @@ export default function StatsCards({ analytics }) {
       value: total,
       sub: 'Semua data masuk',
       icon: Inbox,
-      iconColor: 'text-zinc-500 dark:text-zinc-400',
+      iconBoxClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300',
     },
     {
       label: 'Disetujui',
       value: approved,
       sub: `${approvedPct}% dari total`,
       icon: CheckCircle2,
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      iconBoxClass: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400',
     },
     {
       label: 'Pending',
       value: pending,
       sub: `${pendingPct}% perlu moderasi`,
       icon: Clock3,
-      iconColor: 'text-amber-600 dark:text-amber-400',
+      iconBoxClass: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400',
     },
     {
       label: 'Ditolak',
       value: rejected,
       sub: `${rejectedPct}% ditolak`,
       icon: XCircle,
-      iconColor: 'text-rose-600 dark:text-rose-400',
+      iconBoxClass: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400',
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {items.map((item) => {
         const Icon = item.icon
         return (
-          <div
+          <Card
             key={item.label}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm"
+            className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{item.label}</span>
-              <Icon className={`w-4 h-4 ${item.iconColor}`} />
+            <div className="p-5 flex items-center justify-between">
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  {item.label}
+                </span>
+                <div className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 font-mono">
+                  <AnimatedCounter value={item.value} />
+                </div>
+                <span className="text-[11px] text-zinc-400 font-mono block">
+                  {item.sub}
+                </span>
+              </div>
+              <div className={`p-2.5 rounded-md ${item.iconBoxClass}`}>
+                <Icon className="w-4 h-4" />
+              </div>
             </div>
-            <div className="mt-2 text-2xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-100">
-              <AnimatedCounter value={item.value} />
-            </div>
-            <div className="mt-1 text-xs text-zinc-500">
-              {item.sub}
-            </div>
-          </div>
+          </Card>
         )
       })}
     </div>
