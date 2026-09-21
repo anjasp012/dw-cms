@@ -57,7 +57,6 @@ export default function Dashboard({ username, onLogout }) {
   const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true)
   const [apiStatus, setApiStatus] = useState('checking')
   const [filter, setFilter] = useState(null)
   const [page, setPage] = useState(0)
@@ -93,7 +92,7 @@ export default function Dashboard({ username, onLogout }) {
       setWishes(wishesData)
       setApiStatus('online')
       if (isManualRefresh) {
-        toast.success('Data berhasil disinkronisasi')
+        toast.success('Data berhasil diperbarui')
       }
     } catch (err) {
       if (err.message === 'UNAUTHORIZED') {
@@ -117,17 +116,6 @@ export default function Dashboard({ username, onLogout }) {
     setLoading(true)
     loadData()
   }, [loadData])
-
-  // Auto-sync polling timer (Real-time background polling setiap 4 detik)
-  useEffect(() => {
-    if (!autoSyncEnabled) return
-
-    const interval = setInterval(() => {
-      loadData(false)
-    }, 4000)
-
-    return () => clearInterval(interval)
-  }, [autoSyncEnabled, loadData])
 
   const handleUpdateStatus = async (wishId, newStatus) => {
     try {
@@ -320,24 +308,18 @@ export default function Dashboard({ username, onLogout }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Auto-sync Toggle Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                const nextState = !autoSyncEnabled
-                setAutoSyncEnabled(nextState)
-                toast.info(nextState ? 'Sinkron otomatis diaktifkan' : 'Sinkron otomatis dijeda')
-              }}
-              title={autoSyncEnabled ? 'Sinkron Otomatis Aktif (Klik untuk menjeda)' : 'Sinkron Otomatis Dijeda (Klik untuk mengaktifkan)'}
-              className={`hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-mono border transition-colors ${
-                autoSyncEnabled 
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/60'
-                  : 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800'
-              }`}
+            {/* Manual Refresh Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadData(true)}
+              disabled={refreshing || loading}
+              title="Perbarui data"
+              className="h-9 text-xs font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${autoSyncEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
-              <span>{autoSyncEnabled ? 'SINKRON OTOMATIS' : 'SINKRON DIJEDA'}</span>
-            </button>
+              <RotateCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
 
             {/* Direct Swagger API Docs Button */}
             <Button
