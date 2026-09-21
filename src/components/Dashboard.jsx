@@ -19,7 +19,6 @@ import { Toaster, toast } from 'sonner'
 import { 
   BarChart3,
   Layers, 
-  RotateCw, 
   LogOut, 
   Menu, 
   X, 
@@ -56,7 +55,6 @@ export default function Dashboard({ username, onLogout }) {
   const [analytics, setAnalytics] = useState({ total_wishes: 0, approved: 0, rejected: 0, pending: 0 })
   const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [apiStatus, setApiStatus] = useState('checking')
   const [filter, setFilter] = useState(null)
   const [page, setPage] = useState(0)
@@ -77,11 +75,10 @@ export default function Dashboard({ username, onLogout }) {
     setApiStatus(isHealthy ? 'online' : 'offline')
   }, [])
 
-  const loadData = useCallback(async (isManualRefresh = false) => {
+  const loadData = useCallback(async () => {
     if (isFetchingRef.current) return
     isFetchingRef.current = true
 
-    if (isManualRefresh) setRefreshing(true)
     verifyHealth()
     try {
       const [analyticsData, wishesData] = await Promise.all([
@@ -91,23 +88,16 @@ export default function Dashboard({ username, onLogout }) {
       setAnalytics(analyticsData)
       setWishes(wishesData)
       setApiStatus('online')
-      if (isManualRefresh) {
-        toast.success('Data berhasil diperbarui')
-      }
     } catch (err) {
       if (err.message === 'UNAUTHORIZED') {
         toast.error('Sesi login telah berakhir')
         onLogout()
       } else {
         setApiStatus('offline')
-        if (isManualRefresh) {
-          toast.error('Gagal mengambil data dari server')
-        }
       }
     } finally {
       isFetchingRef.current = false
       setLoading(false)
-      setRefreshing(false)
     }
   }, [filter, page, pageSize, onLogout, verifyHealth])
 
@@ -308,24 +298,11 @@ export default function Dashboard({ username, onLogout }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Manual Refresh Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => loadData(true)}
-              disabled={refreshing || loading}
-              title="Perbarui data"
-              className="h-9 text-xs font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
-            >
-              <RotateCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-
             {/* Direct Swagger API Docs Button */}
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(`${import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'}/docs`, '_blank')}
+              onClick={() => window.open(`${import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8001'}/docs`, '_blank')}
               className="h-9 text-xs font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
             >
               <BookOpen className="w-3.5 h-3.5 mr-1.5 text-zinc-500 dark:text-zinc-400" />
