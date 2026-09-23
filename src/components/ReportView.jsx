@@ -201,6 +201,7 @@ export default function ReportView({ analytics, wishes }) {
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-600 dark:text-zinc-400 font-medium">
                   <th className="px-3 py-2.5 w-12 font-mono">No</th>
+                  <th className="px-3 py-2.5 w-44">Pengunjung</th>
                   <th className="px-3 py-2.5">Pesan Aspirasi</th>
                   <th className="px-3 py-2.5 w-28">Status</th>
                   <th className="px-3 py-2.5 w-40">Tanggal Masuk</th>
@@ -210,6 +211,16 @@ export default function ReportView({ analytics, wishes }) {
                 {wishes.slice(0, 8).map((wish, index) => (
                   <tr key={wish.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
                     <td className="px-3 py-2.5 font-mono text-zinc-400 dark:text-zinc-500">{index + 1}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                        {wish.name || 'Anonim'}
+                      </div>
+                      {wish.age_range && (
+                        <div className="text-[11px] text-zinc-400 font-mono">
+                          {wish.age_range}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-3 py-2.5 max-w-sm truncate text-zinc-900 dark:text-zinc-200">{wish.text}</td>
                     <td className="px-3 py-2.5">
                       <Badge variant={wish.status}>{wish.status}</Badge>
@@ -221,7 +232,7 @@ export default function ReportView({ analytics, wishes }) {
                 ))}
                 {wishes.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-zinc-500">
+                    <td colSpan={5} className="py-6 text-center text-zinc-500">
                       Belum ada data untuk ditampilkan dalam pratinjau.
                     </td>
                   </tr>

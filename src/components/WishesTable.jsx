@@ -36,7 +36,11 @@ export default function WishesTable({
     if (!searchQuery.trim()) return wishes
     const q = searchQuery.toLowerCase()
     return wishes.filter(
-      (w) => w.text.toLowerCase().includes(q) || String(w.id).includes(q)
+      (w) =>
+        (w.text && w.text.toLowerCase().includes(q)) ||
+        (w.name && w.name.toLowerCase().includes(q)) ||
+        (w.age_range && w.age_range.toLowerCase().includes(q)) ||
+        String(w.id).toLowerCase().includes(q)
     )
   }, [wishes, searchQuery])
 
@@ -186,7 +190,7 @@ export default function WishesTable({
           <div className="relative w-full sm:w-72">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
-              placeholder="Cari aspirasi atau ID..."
+              placeholder="Cari aspirasi, nama, usia, ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 h-9 text-xs"
@@ -217,9 +221,10 @@ export default function WishesTable({
                   </button>
                 </th>
                 <th className="px-3 py-3 w-12 font-mono">No</th>
+                <th className="px-4 py-3 w-48">Pengunjung</th>
                 <th className="px-4 py-3">Pesan Aspirasi</th>
                 <th className="px-4 py-3 w-32">Status</th>
-                <th className="px-4 py-3 w-44">Waktu Masuk</th>
+                <th className="px-4 py-3 w-40">Waktu Masuk</th>
                 <th className="px-4 py-3 w-36 text-right pr-6">Aksi</th>
               </tr>
             </thead>
@@ -250,6 +255,16 @@ export default function WishesTable({
                     </td>
                     <td className="px-3 py-3.5 font-mono text-xs text-zinc-400 dark:text-zinc-500" title={`ID UUID: ${wish.id}`}>
                       {page * pageSize + index + 1}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">
+                        {wish.name || 'Anonim'}
+                      </div>
+                      {wish.age_range && (
+                        <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                          {wish.age_range}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3.5 max-w-md">
                       <p className="text-zinc-900 dark:text-zinc-200 line-clamp-2 leading-relaxed text-sm">

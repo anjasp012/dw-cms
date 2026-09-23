@@ -59,6 +59,18 @@ export function exportStyledExcel({ data, filterName = 'Semua Status' }) {
       const rowBg = index % 2 === 0 ? '#FFFFFF' : '#F8FAFC'
 
       // Escape HTML chars
+      const safeName = (item.name || 'Anonim')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+
+      const safeAgeRange = (item.age_range || '-')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+
       const safeText = (item.text || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -73,6 +85,12 @@ export function exportStyledExcel({ data, filterName = 'Semua Status' }) {
           </td>
           <td style="border: 1px solid #CBD5E1; padding: 10px 10px; font-family: Consolas, 'Courier New', monospace; font-size: 10pt; color: #334155; text-align: center;">
             ${item.id}
+          </td>
+          <td style="border: 1px solid #CBD5E1; padding: 10px 12px; font-family: 'Segoe UI', Calibri, Arial; font-size: 11pt; font-weight: 600; color: #0F172A; text-align: left;">
+            ${safeName}
+          </td>
+          <td style="border: 1px solid #CBD5E1; padding: 10px 10px; font-family: 'Segoe UI', Calibri, Arial; font-size: 11pt; color: #475569; text-align: center;">
+            ${safeAgeRange}
           </td>
           <td style="border: 1px solid #CBD5E1; padding: 10px 14px; font-family: 'Segoe UI', Calibri, Arial; font-size: 11pt; color: #0F172A; line-height: 1.4; text-align: left;">
             ${safeText}
@@ -161,29 +179,29 @@ export function exportStyledExcel({ data, filterName = 'Semua Status' }) {
       <table>
         <!-- Title Header Banner -->
         <tr>
-          <th colspan="6" class="title-banner">
+          <th colspan="8" class="title-banner">
             LAPORAN REKAPITULASI ASPIRASI & MODERASI — DREAM WALL
           </th>
         </tr>
         <tr>
-          <td colspan="6" style="height: 10px;"></td>
+          <td colspan="8" style="height: 10px;"></td>
         </tr>
 
         <!-- Metadata Info Box -->
         <tr>
           <td class="meta-label">Waktu Unduh:</td>
-          <td class="meta-val" colspan="2">${dateFormatted}, ${timeFormatted} WIB</td>
+          <td class="meta-val" colspan="3">${dateFormatted}, ${timeFormatted} WIB</td>
           <td class="meta-label">Cakupan Data:</td>
-          <td class="meta-val" colspan="2">${filterName}</td>
+          <td class="meta-val" colspan="3">${filterName}</td>
         </tr>
         <tr>
           <td class="meta-label">Total Data Rekap:</td>
-          <td class="meta-val" colspan="2">${data.length} Baris Aspirasi</td>
+          <td class="meta-val" colspan="3">${data.length} Baris Aspirasi</td>
           <td class="meta-label">Sistem Sumber:</td>
-          <td class="meta-val" colspan="2">Dream Wall Admin Console (v1.0)</td>
+          <td class="meta-val" colspan="3">Dream Wall Admin Console (v1.0)</td>
         </tr>
         <tr>
-          <td colspan="6" style="height: 12px;"></td>
+          <td colspan="8" style="height: 12px;"></td>
         </tr>
 
         <!-- Table Column Headers -->
@@ -191,6 +209,8 @@ export function exportStyledExcel({ data, filterName = 'Semua Status' }) {
           <tr>
             <th class="th-header" style="width: 50px;">No</th>
             <th class="th-header" style="width: 280px;">ID UUID</th>
+            <th class="th-header" style="width: 180px;">Nama Pengunjung</th>
+            <th class="th-header" style="width: 120px;">Rentang Usia</th>
             <th class="th-header" style="width: 450px;">Pesan Aspirasi Pengunjung</th>
             <th class="th-header" style="width: 170px;">Status Moderasi</th>
             <th class="th-header" style="width: 130px;">Tanggal Masuk</th>

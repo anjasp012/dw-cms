@@ -37,6 +37,26 @@ export default function WishDetailDialog({ wish, open, onClose, onUpdateStatus, 
         </DialogHeader>
 
         <div className="p-5 space-y-4">
+          {/* Visitor Info: Nama & Rentang Usia */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400">
+                Nama Pengunjung
+              </label>
+              <div className="rounded-md bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                {wish.name || 'Anonim'}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400">
+                Rentang Usia
+              </label>
+              <div className="rounded-md bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">
+                {wish.age_range || '-'}
+              </div>
+            </div>
+          </div>
+
           {/* Main Message Content */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400">
