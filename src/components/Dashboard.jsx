@@ -54,10 +54,14 @@ export default function Dashboard({ username, onLogout }) {
 
   const [analytics, setAnalytics] = useState({ total_wishes: 0, approved: 0, rejected: 0, pending: 0 })
   const [wishes, setWishes] = useState([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [apiStatus, setApiStatus] = useState('checking')
   const [filter, setFilter] = useState(null)
-  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -69,6 +73,15 @@ export default function Dashboard({ username, onLogout }) {
     report: 'Laporan & Ekspor Data',
     settings: 'Pengaturan Frontend',
   }
+
+  // Debounce search input 300ms
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const verifyHealth = useCallback(async () => {
     const isHealthy = await checkApiHealth()
@@ -83,10 +96,25 @@ export default function Dashboard({ username, onLogout }) {
     try {
       const [analyticsData, wishesData] = await Promise.all([
         fetchAnalytics(),
-        fetchWishes({ status: filter, limit: pageSize, offset: page * pageSize }),
+        fetchWishes({
+          status: filter,
+          search: debouncedSearch,
+          page,
+          pageSize,
+          paginated: true,
+        }),
       ])
       setAnalytics(analyticsData)
-      setWishes(wishesData)
+      if (wishesData && wishesData.items) {
+        setWishes(wishesData.items)
+        setTotalCount(wishesData.total ?? 0)
+        setTotalPages(wishesData.totalPages ?? 1)
+      } else if (Array.isArray(wishesData)) {
+        setWishes(wishesData)
+        const count = filter ? wishesData.length : (analyticsData.total_wishes || wishesData.length)
+        setTotalCount(count)
+        setTotalPages(Math.max(1, Math.ceil(count / pageSize)))
+      }
       setApiStatus('online')
     } catch (err) {
       if (err.message === 'UNAUTHORIZED') {
@@ -99,7 +127,7 @@ export default function Dashboard({ username, onLogout }) {
       isFetchingRef.current = false
       setLoading(false)
     }
-  }, [filter, page, pageSize, onLogout, verifyHealth])
+  }, [filter, debouncedSearch, page, pageSize, onLogout, verifyHealth])
 
   // Inisialisasi awal
   useEffect(() => {
@@ -154,12 +182,12 @@ export default function Dashboard({ username, onLogout }) {
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter)
-    setPage(0)
+    setPage(1)
   }
 
   const handlePageSizeChange = (newSize) => {
     setPageSize(newSize)
-    setPage(0)
+    setPage(1)
   }
 
   const navItems = [
@@ -344,6 +372,10 @@ export default function Dashboard({ username, onLogout }) {
                 filter={filter}
                 page={page}
                 pageSize={pageSize}
+                totalCount={totalCount}
+                totalPages={totalPages}
+                searchQuery={search}
+                onSearchChange={setSearch}
                 onFilterChange={handleFilterChange}
                 onPageChange={setPage}
                 onPageSizeChange={handlePageSizeChange}

@@ -140,10 +140,20 @@ export async function fetchAnalytics() {
   return request(`${API_BASE}/admin/analytics`);
 }
 
-export async function fetchWishes({ status, limit = 15, offset = 0 } = {}) {
-  let url = `${API_BASE}/admin/wishes?limit=${limit}&offset=${offset}`;
-  if (status) url += `&status=${status}`;
-  return request(url);
+export async function fetchWishes({ status, search = '', page = null, pageSize = 20, limit = 20, offset = 0, paginated = false } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (search && search.trim()) params.append('search', search.trim());
+  if (page !== null && page !== undefined) {
+    params.append('page', String(page));
+    params.append('pageSize', String(pageSize));
+    params.append('paginated', 'true');
+  } else {
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    if (paginated) params.append('paginated', 'true');
+  }
+  return request(`${API_BASE}/admin/wishes?${params.toString()}`);
 }
 
 export async function updateWishStatus(wishId, newStatus) {

@@ -22,19 +22,33 @@ const FILTERS = [
 ]
 
 export default function WishesTable({
-  wishes, loading, filter, page, pageSize = 20,
+  wishes, loading, filter, page = 1, pageSize = 20,
+  totalCount, totalPages,
+  searchQuery, onSearchChange,
   onFilterChange, onPageChange, onPageSizeChange, onUpdateStatus, onDelete,
   onBulkUpdateStatus, onBulkDelete
 }) {
   const [selectedWish, setSelectedWish] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [localSearchQuery, setLocalSearchQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
+  const isControlledSearch = typeof onSearchChange === 'function'
+  const currentSearch = isControlledSearch ? (searchQuery ?? '') : localSearchQuery
+
+  const handleSearchChange = (val) => {
+    if (isControlledSearch) {
+      onSearchChange(val)
+    } else {
+      setLocalSearchQuery(val)
+    }
+  }
+
   const filteredWishes = useMemo(() => {
-    if (!searchQuery.trim()) return wishes
-    const q = searchQuery.toLowerCase()
+    if (isControlledSearch) return wishes
+    if (!currentSearch.trim()) return wishes
+    const q = currentSearch.toLowerCase()
     return wishes.filter(
       (w) =>
         (w.text && w.text.toLowerCase().includes(q)) ||
@@ -42,12 +56,15 @@ export default function WishesTable({
         (w.age_range && w.age_range.toLowerCase().includes(q)) ||
         String(w.id).toLowerCase().includes(q)
     )
-  }, [wishes, searchQuery])
+  }, [wishes, currentSearch, isControlledSearch])
 
-  const hasNext = wishes.length === pageSize
-  const hasPrev = page > 0
-  const from = wishes.length > 0 ? page * pageSize + 1 : 0
-  const to = wishes.length > 0 ? from + wishes.length - 1 : 0
+  const effectiveTotal = typeof totalCount === 'number' ? totalCount : filteredWishes.length
+  const effectiveTotalPages = typeof totalPages === 'number' && totalPages > 0
+    ? totalPages
+    : Math.max(1, Math.ceil(effectiveTotal / pageSize))
+
+  const from = effectiveTotal > 0 ? (page - 1) * pageSize + 1 : 0
+  const to = effectiveTotal > 0 ? Math.min(page * pageSize, effectiveTotal) : 0
 
   // Selection helpers
   const allCurrentIds = useMemo(() => filteredWishes.map((w) => w.id), [filteredWishes])
@@ -174,7 +191,7 @@ export default function WishesTable({
                 key={f.label}
                 onClick={() => {
                   onFilterChange(f.value)
-                  setSearchQuery('')
+                  handleSearchChange('')
                 }}
                 className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${filter === f.value
                     ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold'
@@ -191,8 +208,8 @@ export default function WishesTable({
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input
               placeholder="Cari aspirasi, nama, usia, ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={currentSearch}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8 h-9 text-xs"
             />
           </div>
@@ -254,7 +271,7 @@ export default function WishesTable({
                       </button>
                     </td>
                     <td className="px-3 py-3.5 font-mono text-xs text-zinc-400 dark:text-zinc-500" title={`ID UUID: ${wish.id}`}>
-                      {page * pageSize + index + 1}
+                      {(page - 1) * pageSize + index + 1}
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">
@@ -345,8 +362,8 @@ export default function WishesTable({
               <FileText className="w-7 h-7 text-zinc-400 dark:text-zinc-600 mx-auto opacity-50 stroke-[1.5]" />
               <div className="text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300">Tidak ada aspirasi ditemukan</div>
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                {searchQuery
-                  ? `Tidak ada hasil pencarian yang cocok untuk "${searchQuery}".`
+                {currentSearch
+                  ? `Tidak ada hasil pencarian yang cocok untuk "${currentSearch}".`
                   : 'Belum ada data aspirasi pada filter status yang dipilih.'}
               </p>
             </div>
@@ -354,13 +371,16 @@ export default function WishesTable({
         </div>
 
         {/* Table Footer / Pagination */}
-        <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span>Tampilkan:</span>
               <select
                 value={pageSize}
-                onChange={(e) => onPageSizeChange && onPageSizeChange(Number(e.target.value))}
+                onChange={(e) => {
+                  onPageSizeChange && onPageSizeChange(Number(e.target.value))
+                  clearSelection()
+                }}
                 className="h-7 px-2 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer shadow-sm"
               >
                 {[10, 20, 30, 50, 100].map((size) => (
@@ -371,42 +391,73 @@ export default function WishesTable({
               </select>
             </div>
             <span className="text-zinc-300 dark:text-zinc-700">|</span>
-            <span>
-              {wishes.length > 0
-                ? `Menampilkan ${from} - ${to} data`
-                : '0 data'}
-            </span>
-
+            <div>
+              {effectiveTotal === 0 ? (
+                <span>Menampilkan <strong>0</strong> data</span>
+              ) : (
+                <span>
+                  Menampilkan <strong>{from}–{to}</strong> dari <strong>{effectiveTotal.toLocaleString('id-ID')}</strong> data
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!hasPrev}
+          <div className="flex items-center gap-1 font-mono">
+            <button
+              type="button"
               onClick={() => {
-                onPageChange(page - 1)
+                onPageChange(1)
                 clearSelection()
               }}
-              className="h-8 text-xs px-3"
+              disabled={page <= 1 || loading}
+              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              title="Halaman pertama"
             >
-              <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
-            </Button>
-            <span className="px-2.5 py-1 text-xs font-mono text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800">
-              Halaman {page + 1}
+              «
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onPageChange(Math.max(1, page - 1))
+                clearSelection()
+              }}
+              disabled={page <= 1 || loading}
+              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              title="Halaman sebelumnya"
+            >
+              ‹
+            </button>
+            <span className="px-3 py-1 rounded bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-800 dark:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+              {page} / {effectiveTotalPages}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!hasNext}
+            <button
+              type="button"
               onClick={() => {
-                onPageChange(page + 1)
+                onPageChange(Math.min(effectiveTotalPages, page + 1))
                 clearSelection()
               }}
-              className="h-8 text-xs px-3"
+              disabled={page >= effectiveTotalPages || loading}
+              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              title="Halaman berikutnya"
             >
-              Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
-            </Button>
+              ›
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onPageChange(effectiveTotalPages)
+                clearSelection()
+              }}
+              disabled={page >= effectiveTotalPages || loading}
+              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              title="Halaman terakhir"
+            >
+              »
+            </button>
+          </div>
+
+          <div className="text-[11px] text-zinc-400 dark:text-zinc-500">
+            Halaman {page} dari {effectiveTotalPages.toLocaleString('id-ID')}
           </div>
         </div>
       </Card>
