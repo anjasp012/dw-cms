@@ -21,6 +21,51 @@ const FILTERS = [
   { label: 'Rejected', value: 'rejected' },
 ]
 
+function getPaginationRange(currentPage, totalPages, siblingCount = 2) {
+  const totalPageNumbers = siblingCount * 2 + 5 // 2*2 + 5 = 9
+
+  if (totalPages <= totalPageNumbers) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+  }
+
+  const leftSiblingIndex = Math.max(currentPage - siblingCount, 1)
+  const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages)
+
+  const shouldShowLeftDots = leftSiblingIndex > 2
+  const shouldShowRightDots = rightSiblingIndex < totalPages - 1
+
+  const firstPageIndex = 1
+  const lastPageIndex = totalPages
+
+  // Case 1: Only right dots
+  if (!shouldShowLeftDots && shouldShowRightDots) {
+    const leftItemCount = 3 + 2 * siblingCount
+    const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1)
+    return [...leftRange, 'dots-right', lastPageIndex]
+  }
+
+  // Case 2: Only left dots
+  if (shouldShowLeftDots && !shouldShowRightDots) {
+    const rightItemCount = 3 + 2 * siblingCount
+    const rightRange = Array.from(
+      { length: rightItemCount },
+      (_, i) => totalPages - rightItemCount + i + 1
+    )
+    return [firstPageIndex, 'dots-left', ...rightRange]
+  }
+
+  // Case 3: Both left and right dots
+  if (shouldShowLeftDots && shouldShowRightDots) {
+    const middleRange = Array.from(
+      { length: rightSiblingIndex - leftSiblingIndex + 1 },
+      (_, i) => leftSiblingIndex + i
+    )
+    return [firstPageIndex, 'dots-left', ...middleRange, 'dots-right', lastPageIndex]
+  }
+
+  return Array.from({ length: totalPages }, (_, i) => i + 1)
+}
+
 export default function WishesTable({
   wishes, loading, filter, page = 1, pageSize = 20,
   totalCount, totalPages,
@@ -65,6 +110,10 @@ export default function WishesTable({
 
   const from = effectiveTotal > 0 ? (page - 1) * pageSize + 1 : 0
   const to = effectiveTotal > 0 ? Math.min(page * pageSize, effectiveTotal) : 0
+
+  const paginationRange = useMemo(() => {
+    return getPaginationRange(page, effectiveTotalPages, 2)
+  }, [page, effectiveTotalPages])
 
   // Selection helpers
   const allCurrentIds = useMemo(() => filteredWishes.map((w) => w.id), [filteredWishes])
@@ -402,19 +451,9 @@ export default function WishesTable({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 font-mono">
-            <button
-              type="button"
-              onClick={() => {
-                onPageChange(1)
-                clearSelection()
-              }}
-              disabled={page <= 1 || loading}
-              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
-              title="Halaman pertama"
-            >
-              «
-            </button>
+          {/* Numbered Pagination Control matching the requested design: < 1 ... 3 4 [5] 6 7 ... 29 > */}
+          <div className="flex items-center gap-1 sm:gap-1.5 select-none font-sans">
+            {/* Prev Button */}
             <button
               type="button"
               onClick={() => {
@@ -422,14 +461,49 @@ export default function WishesTable({
                 clearSelection()
               }}
               disabled={page <= 1 || loading}
-              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              className="h-9 w-10 flex items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
               title="Halaman sebelumnya"
             >
-              ‹
+              <ChevronLeft className="w-4 h-4 text-zinc-400 dark:text-zinc-400" />
             </button>
-            <span className="px-3 py-1 rounded bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-800 dark:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
-              {page} / {effectiveTotalPages}
-            </span>
+
+            {/* Page Numbers and Ellipses */}
+            {paginationRange.map((item, idx) => {
+              if (item === 'dots-left' || item === 'dots-right') {
+                return (
+                  <span
+                    key={`${item}-${idx}`}
+                    className="h-9 px-1.5 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-sm font-medium tracking-widest select-none"
+                  >
+                    ...
+                  </span>
+                )
+              }
+
+              const pageNum = Number(item)
+              const isActive = pageNum === page
+
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => {
+                    onPageChange(pageNum)
+                    clearSelection()
+                  }}
+                  disabled={loading}
+                  className={`h-9 min-w-[34px] sm:min-w-[38px] px-2 flex items-center justify-center rounded-md text-sm transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-[#b0b8c1] dark:bg-zinc-600 text-white font-medium shadow-sm'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-normal'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+
+            {/* Next Button */}
             <button
               type="button"
               onClick={() => {
@@ -437,27 +511,11 @@ export default function WishesTable({
                 clearSelection()
               }}
               disabled={page >= effectiveTotalPages || loading}
-              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+              className="h-9 w-10 flex items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
               title="Halaman berikutnya"
             >
-              ›
+              <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-400" />
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                onPageChange(effectiveTotalPages)
-                clearSelection()
-              }}
-              disabled={page >= effectiveTotalPages || loading}
-              className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
-              title="Halaman terakhir"
-            >
-              »
-            </button>
-          </div>
-
-          <div className="text-[11px] text-zinc-400 dark:text-zinc-500">
-            Halaman {page} dari {effectiveTotalPages.toLocaleString('id-ID')}
           </div>
         </div>
       </Card>
